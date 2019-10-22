@@ -10,7 +10,7 @@ from keras.layers import Dense
 import matplotlib.pyplot as plt
 from matplotlib import *
 
-#Reading dataset
+#Reading dataset, here, the african bank crisis data is used in this experiment
 df = pd.read_csv('african_crises.csv')
 
 #Data preprocessing
