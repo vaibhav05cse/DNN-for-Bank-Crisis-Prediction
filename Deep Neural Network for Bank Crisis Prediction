@@ -1,0 +1,82 @@
+#importing Libraries
+import pandas as pd
+import numpy as np
+from sklearn import preprocessing
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import confusion_matrix
+import seaborn as sns
+from keras.models import Sequential
+from keras.layers import Dense
+import matplotlib.pyplot as plt
+from matplotlib import *
+
+#Reading dataset
+df = pd.read_csv('african_crises.csv')
+
+#Data preprocessing
+df['banking_crisis'] = df['banking_crisis'].replace('crisis',np.nan)
+df['banking_crisis'] = df['banking_crisis'].fillna(1)
+df['banking_crisis'] = df['banking_crisis'].replace('no_crisis',np.nan)
+df['banking_crisis'] = df['banking_crisis'].fillna(0)
+df.drop(['cc3','country'], axis=1, inplace=True)
+
+#View columns in the dataset
+for col in df.columns: 
+    print(col)
+
+#Scaling of data
+df_scaled = preprocessing.scale(df)
+df_scaled = pd.DataFrame(df_scaled, columns=df.columns)
+df_scaled['banking_crisis'] = df['banking_crisis']
+df = df_scaled
+
+#Defiing input and output attributes 
+X = df.loc[:,df.columns != 'banking_crisis']
+y = df.loc[:, 'banking_crisis']
+
+# Splitting the dataset into the Training set and Test set
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 0)
+
+
+#Defining the Deep Neural Net Model
+# Initialising the ANN
+classifier = Sequential()
+# Adding the input layer and the first hidden layer
+classifier.add(Dense(output_dim = 32, init = 'uniform', activation = 'sigmoid', input_dim = 11))
+# Adding the second hidden layer
+classifier.add(Dense(output_dim = 32, init = 'uniform', activation = 'sigmoid'))
+# Adding the fourth hidden layer
+classifier.add(Dense(output_dim = 8, init = 'uniform', activation = 'sigmoid'))
+# Adding the output layer
+classifier.add(Dense(output_dim = 1, init = 'uniform', activation = 'sigmoid'))
+# Compiling the ANN
+classifier.compile(optimizer = 'adam', loss = 'binary_crossentropy', metrics = ['accuracy'])
+#Fitting the model
+classifier.fit(X_train, y_train, epochs=200)
+
+
+#Scoring of model on training and test data
+scores = classifier.evaluate(X_train, y_train)
+print ("Training Accuracy: %.2f%%\n" % (scores[1]*100))
+scores = classifier.evaluate(X_test, y_test)
+print ("Testing Accuracy: %.2f%%\n" % (scores[1]*100))
+
+#Plotting the confusion matrix
+from sklearn.metrics import confusion_matrix
+import sys
+from pylab import *
+y_pred = classifier.predict_classes(X_test)
+cm = confusion_matrix(y_test, y_pred)
+labels = ['No Banking Crisis', 'Banking Crisis']
+fig = plt.figure(figsize=(20,10))
+ax = fig.add_subplot(111)
+cax = ax.matshow(cm)
+plt.title('Confusion matrix of the DNN Classifier')
+fig.colorbar(cax)
+ax.set_xticklabels([''] + labels)
+ax.set_yticklabels([''] + labels)
+plt.xlabel('Predicted')
+plt.ylabel('True')
+plt.show()
+
